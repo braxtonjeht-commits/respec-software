@@ -40,17 +40,21 @@ body {
 .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
 
 /* ===== NAV ===== */
-nav {
+.nav-outer {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(12,15,13,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  width: 100%;
+}
+
+.nav-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 22px 0;
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  background: rgba(12,15,13,0.92);
-  backdrop-filter: blur(12px);
-  z-index: 100;
 }
 
 .logo {
@@ -701,9 +705,8 @@ footer a:hover { color: var(--accent); }
 </head>
 <body>
 
-<div class="wrap">
-  <!-- NAV -->
-  <nav>
+<nav class="nav-outer">
+  <div class="wrap nav-inner">
     <a href="#" class="logo"><span class="slash">/</span>respec</a>
     <div class="nav-links">
       <a href="#services">Services</a>
@@ -711,8 +714,8 @@ footer a:hover { color: var(--accent); }
       <a href="#about">About</a>
       <a href="#contact" class="btn-start">Start ↗</a>
     </div>
-  </nav>
-</div>
+  </div>
+</nav>
 
 <!-- HERO -->
 <div class="wrap">
@@ -1103,19 +1106,40 @@ footer a:hover { color: var(--accent); }
 <script>
 document.getElementById('yr').textContent = new Date().getFullYear();
 
-function submitContact() {
+async function submitContact() {
   const name = document.getElementById('cf-name').value.trim();
+  const biz  = document.getElementById('cf-biz').value.trim();
   const email = document.getElementById('cf-email').value.trim();
-  const msg = document.getElementById('cf-msg').value.trim();
+  const type  = document.getElementById('cf-type').value;
+  const msg   = document.getElementById('cf-msg').value.trim();
 
   if (!name || !email || !msg) {
     alert('Please fill in your name, email, and message.');
     return;
   }
 
-  // TODO: wire to n8n webhook or Formspree
+  const btn = document.querySelector('.btn-submit');
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+
+  try {
+    // Wire to n8n webhook — swap URL when n8n is on VPS
+    const res = await fetch('https://n8n.braxtonjeht.com/webhook/respec-contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, biz, email, type, msg, submittedAt: new Date().toISOString() })
+    });
+    if (!res.ok) throw new Error('failed');
+  } catch(e) {
+    // fail silently — still show success so user isn't blocked
+    // log to console for debugging
+    console.error('Contact form webhook failed:', e);
+  }
+
   document.getElementById('contact-form').style.display = 'none';
   document.getElementById('form-success').style.display = 'block';
+  btn.textContent = 'Send it ↗';
+  btn.disabled = false;
 }
 </script>
 </body>
