@@ -1515,6 +1515,14 @@ footer {
         <div class="check">✓</div>
         <p>Got it. We'll be in touch within one business day.</p>
       </div>
+      <div class="form-success" id="form-error">
+        <div class="check" style="color:#ef4444">!</div>
+        <p>Something went wrong sending that. Call or email us directly and we'll get you sorted:<br><br>
+          <a href="tel:+15125695306" style="color:var(--green)">(512) 569-5306</a><br>
+          <a href="mailto:craymer@respecsoftware.com" style="color:var(--green)">craymer@respecsoftware.com</a><br>
+          <a href="mailto:klilley@respecsoftware.com" style="color:var(--green)">klilley@respecsoftware.com</a>
+        </p>
+      </div>
     </div>
   </div>
 </section>
@@ -1552,17 +1560,22 @@ async function submitContact() {
   btn.disabled = true;
 
   try {
-    await fetch('https://n8n.braxtonjeht.com/webhook/respec-contact', {
+    const res = await fetch('https://n8n.braxtonjeht.com/webhook/respec-contact', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, biz, email, type, msg, submittedAt: new Date().toISOString() })
     });
+
+    if (!res.ok) throw new Error('Webhook failed');
+
+    document.getElementById('contact-form').style.display = 'none';
+    document.getElementById('form-success').style.display = 'block';
   } catch(e) {
     console.error('Webhook failed:', e);
+    document.getElementById('contact-form').style.display = 'none';
+    document.getElementById('form-error').style.display = 'block';
   }
 
-  document.getElementById('contact-form').style.display = 'none';
-  document.getElementById('form-success').style.display = 'block';
   btn.textContent = 'Send it ↗';
   btn.disabled = false;
 }
