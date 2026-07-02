@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo — Shop Dashboard | Respec Software</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#07080A;color:#E2E8F0;font-family:'Inter',sans-serif;min-height:100vh;padding-bottom:40px}
+.demo-badge{position:fixed;top:12px;right:12px;background:#4ade80;color:#041a0b;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:5px 12px;border-radius:20px;letter-spacing:0.05em;z-index:100}
+header{padding:20px 16px 14px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.logo{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:16px;display:flex;align-items:center;gap:6px}
+.logo .slash{color:#4ade80}
+.sub{font-size:12px;color:#64748B;margin-top:4px;font-family:'JetBrains Mono',monospace}
+.stats{display:flex;gap:10px;padding:14px 16px;overflow-x:auto}
+.stat{background:#0F1115;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 14px;min-width:80px;flex-shrink:0}
+.stat .n{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#4ade80}
+.stat .l{font-size:10px;color:#64748B;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em}
+.tabs{display:flex;gap:8px;padding:0 16px 14px;overflow-x:auto}
+.tab{font-family:'JetBrains Mono',monospace;font-size:11px;padding:7px 14px;border-radius:20px;background:#0F1115;border:1px solid rgba(255,255,255,0.08);color:#94A3B8;white-space:nowrap;cursor:pointer}
+.tab.active{background:#4ade80;color:#041a0b;border-color:#4ade80;font-weight:700}
+.list{padding:0 16px;display:flex;flex-direction:column;gap:10px}
+.order{background:#0F1115;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;cursor:pointer}
+.order-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.oid{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700}
+.badge{font-family:'JetBrains Mono',monospace;font-size:10px;padding:3px 9px;border-radius:20px;font-weight:700}
+.b-diag{background:rgba(96,165,250,0.15);color:#60a5fa}
+.b-wait{background:rgba(249,115,22,0.15);color:#f97316}
+.b-prog{background:rgba(74,222,128,0.15);color:#4ade80}
+.b-done{background:rgba(148,163,184,0.15);color:#94A3B8}
+.oname{font-size:14px;color:#E2E8F0;margin-bottom:2px}
+.ocar{font-size:12px;color:#64748B}
+/* detail overlay */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:flex-end;z-index:200}
+.overlay.show{display:flex}
+.sheet{background:#0F1115;border-radius:20px 20px 0 0;width:100%;max-height:85vh;overflow-y:auto;padding:20px}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.close-btn{background:rgba(255,255,255,0.08);border:none;color:#E2E8F0;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer}
+.section{margin-bottom:18px}
+.section-h{font-family:'JetBrains Mono',monospace;font-size:11px;color:#4ade80;letter-spacing:0.06em;margin-bottom:8px;text-transform:uppercase}
+select.status-select{width:100%;background:#161A20;border:1px solid rgba(255,255,255,0.08);color:#E2E8F0;padding:10px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;background:#161A20;padding:12px 14px;border-radius:8px}
+.toggle{width:40px;height:22px;background:rgba(255,255,255,0.15);border-radius:20px;position:relative;cursor:pointer;transition:0.2s}
+.toggle.on{background:#4ade80}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;left:2px;transition:0.2s}
+.toggle.on::after{left:20px}
+.info-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.info-row .k{color:#64748B}
+.send-btn{width:100%;padding:12px;background:#4ade80;color:#041a0b;border:none;border-radius:8px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;cursor:pointer;margin-top:8px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#4ade80;color:#041a0b;padding:10px 20px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;z-index:300;display:none}
+</style>
+</head>
+<body>
+<div class="demo-badge">◉ DEMO MODE</div>
+<header>
+  <div class="logo"><span class="slash">/</span>respec — shop dashboard demo</div>
+  <div class="sub">This is what YOUR shop owner sees on their phone</div>
+</header>
+
+<div class="stats" id="stats"></div>
+<div class="tabs">
+  <div class="tab active" data-f="all" onclick="filterTab(this,'all')">All</div>
+  <div class="tab" data-f="active" onclick="filterTab(this,'active')">Active</div>
+  <div class="tab" data-f="waiting" onclick="filterTab(this,'waiting')">Waiting</div>
+  <div class="tab" data-f="done" onclick="filterTab(this,'done')">Complete</div>
+</div>
+<div class="list" id="list"></div>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div style="font-family:'JetBrains Mono',monospace;font-weight:700" id="sheetTitle"></div>
+      <button class="close-btn" onclick="closeSheet()">✕</button>
+    </div>
+    <div class="section">
+      <div class="section-h">Status</div>
+      <select class="status-select" id="statusSelect" onchange="updateStatus()">
+        <option>Diagnosing</option>
+        <option>Waiting on Parts</option>
+        <option>In Progress</option>
+        <option>Complete</option>
+        <option>Shipped</option>
+      </select>
+    </div>
+    <div class="section">
+      <div class="section-h">Customer</div>
+      <div class="info-row"><span class="k">Name</span><span id="dName"></span></div>
+      <div class="info-row"><span class="k">Vehicle</span><span id="dVehicle"></span></div>
+      <div class="info-row"><span class="k">Phone</span><span id="dPhone"></span></div>
+    </div>
+    <div class="section">
+      <div class="section-h">Payment</div>
+      <div class="toggle-row">
+        <span style="font-size:13px">Mark as Paid</span>
+        <div class="toggle" id="paidToggle" onclick="togglePaid()"></div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <input type="text" id="chargeAmount" placeholder="$0.00" style="flex:1;background:#161A20;border:1px solid rgba(255,255,255,0.08);color:#E2E8F0;padding:10px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px">
+      </div>
+      <button class="send-btn" onclick="sendInvoice()">Send Payment Link →</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+let orders = [
+  {id:'ECU-1042', name:'Kevin Sanders', car:'2019 Ford F-150', phone:'(254) 555-0142', status:'In Progress', paid:false, cat:'active'},
+  {id:'ECU-1043', name:'Maria Lopez', car:'2021 Toyota Tacoma', phone:'(254) 555-0187', status:'Diagnosing', paid:false, cat:'active'},
+  {id:'ECU-1044', name:'David Chen', car:'2018 Subaru WRX', phone:'(254) 555-0119', status:'Waiting on Parts', paid:true, cat:'waiting'},
+  {id:'ECU-1045', name:'James Miller', car:'2020 RAM 1500', phone:'(254) 555-0165', status:'Complete', paid:true, cat:'done'},
+  {id:'ECU-1046', name:'Ashley Brooks', car:'2017 Chevy Silverado', phone:'(254) 555-0133', status:'Shipped', paid:true, cat:'done'},
+];
+let currentFilter = 'all';
+let activeOrder = null;
+
+function badgeClass(s){
+  if(s==='Diagnosing') return 'b-diag';
+  if(s==='Waiting on Parts') return 'b-wait';
+  if(s==='In Progress') return 'b-prog';
+  return 'b-done';
+}
+
+function renderStats(){
+  const active = orders.filter(o=>o.status==='In Progress'||o.status==='Diagnosing').length;
+  const waiting = orders.filter(o=>o.status==='Waiting on Parts').length;
+  const done = orders.filter(o=>o.status==='Complete'||o.status==='Shipped').length;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="n">${orders.length}</div><div class="l">TOTAL</div></div>
+    <div class="stat"><div class="n">${active}</div><div class="l">ACTIVE</div></div>
+    <div class="stat"><div class="n">${waiting}</div><div class="l">WAITING</div></div>
+    <div class="stat"><div class="n">${done}</div><div class="l">DONE</div></div>
+  `;
+}
+
+function renderList(){
+  let filtered = orders;
+  if(currentFilter==='active') filtered = orders.filter(o=>o.status==='In Progress'||o.status==='Diagnosing');
+  if(currentFilter==='waiting') filtered = orders.filter(o=>o.status==='Waiting on Parts');
+  if(currentFilter==='done') filtered = orders.filter(o=>o.status==='Complete'||o.status==='Shipped');
+
+  document.getElementById('list').innerHTML = filtered.map(o=>`
+    <div class="order" onclick="openSheet('${o.id}')">
+      <div class="order-top">
+        <div class="oid">${o.id}</div>
+        <div class="badge ${badgeClass(o.status)}">${o.status}</div>
+      </div>
+      <div class="oname">${o.name}</div>
+      <div class="ocar">${o.car}</div>
+    </div>
+  `).join('');
+}
+
+function filterTab(el,f){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = f;
+  renderList();
+}
+
+function openSheet(id){
+  activeOrder = orders.find(o=>o.id===id);
+  document.getElementById('sheetTitle').textContent = activeOrder.id;
+  document.getElementById('statusSelect').value = activeOrder.status;
+  document.getElementById('dName').textContent = activeOrder.name;
+  document.getElementById('dVehicle').textContent = activeOrder.car;
+  document.getElementById('dPhone').textContent = activeOrder.phone;
+  document.getElementById('paidToggle').className = 'toggle' + (activeOrder.paid ? ' on' : '');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeSheet(){ document.getElementById('overlay').classList.remove('show'); }
+
+function updateStatus(){
+  activeOrder.status = document.getElementById('statusSelect').value;
+  renderList(); renderStats();
+  showToast('Status updated — customer notified ✓');
+}
+function togglePaid(){
+  activeOrder.paid = !activeOrder.paid;
+  document.getElementById('paidToggle').className = 'toggle' + (activeOrder.paid ? ' on' : '');
+  showToast(activeOrder.paid ? 'Marked as paid ✓' : 'Marked as unpaid');
+}
+function sendInvoice(){
+  const amt = document.getElementById('chargeAmount').value || '$0.00';
+  showToast(`Payment link for ${amt} sent to ${activeOrder.name} ✓`);
+  document.getElementById('chargeAmount').value='';
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(()=>t.style.display='none', 2200);
+}
+
+renderStats();
+renderList();
+</script>
+</body>
+</html>
