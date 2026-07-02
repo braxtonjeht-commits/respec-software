@@ -31,13 +31,20 @@ header{display:flex;justify-content:space-between;align-items:center;padding:24p
 .new-flag{position:absolute;top:0;right:0;background:#f97316;color:#1a0800;font-size:10px;font-weight:700;padding:4px 10px;border-radius:0 14px 0 10px}
 .alert-banner{position:fixed;top:0;left:0;right:0;background:#f97316;color:#1a0800;text-align:center;padding:14px;font-weight:700;font-size:14px;transform:translateY(-100%);transition:transform 0.4s;z-index:50}
 .alert-banner.show{transform:translateY(0)}
+.tour-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,17,21,0.95);border-top:1px solid rgba(255,255,255,0.08);padding:10px 24px;display:flex;justify-content:space-between;align-items:center;z-index:90}
+.tour-btn{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;padding:8px 16px;border-radius:8px;text-decoration:none;cursor:pointer;border:none}
+.tour-back{background:transparent;color:#94A3B8;border:1px solid rgba(255,255,255,0.1)!important}
+.tour-finish{background:#4ade80;color:#041a0b}
+.tour-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:#64748B;letter-spacing:0.06em}
+.contact-btn{position:fixed;top:16px;left:340px;background:#161A20;border:1px solid rgba(255,255,255,0.1);color:#4ade80;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;padding:6px 14px;border-radius:20px;text-decoration:none;z-index:100}
 </style>
 </head>
 <body>
 <div class="demo-badge">◉ DEMO MODE — Simulated live data</div>
+<a class="contact-btn" href="mailto:klilley@respecsoftware.com?subject=Interested%20in%20Respec%20Software&body=Hi%20Kevin%2C%0A%0AI%20just%20walked%20through%20the%20demo%20and%20want%20to%20talk%20about%20building%20this%20for%20my%20business.">✉ Talk to Kevin</a>
 <div class="alert-banner" id="alertBanner">🔔 NEW ORDER RECEIVED — ECU-1047</div>
 <header>
-  <div class="logo"><span class="slash">/</span>respec — shop floor display demo</div>
+  <div class="logo"><span class="slash">/</span>respec — shop floor display demo (step 3 of 3)</div>
   <div class="clock" id="clock"></div>
 </header>
 <div class="stats-bar" id="statsBar"></div>
@@ -100,5 +107,12 @@ setTimeout(()=>{
   setTimeout(()=>document.getElementById('alertBanner').classList.remove('show'), 3500);
 }, 8000);
 </script>
+
+<div class="tour-nav">
+  <a href="/demo" class="tour-btn tour-back">← Back: Dashboard</a>
+  <span class="tour-label">TOUR STEP 3 OF 3 — SHOP FLOOR HUD</span>
+  <a href="mailto:klilley@respecsoftware.com?subject=Interested%20in%20Respec%20Software&body=Hi%20Kevin%2C%0A%0AI%20just%20walked%20through%20the%20full%20demo%20and%20want%20to%20talk%20about%20building%20this%20for%20my%20business." class="tour-btn tour-finish">Talk to Kevin →</a>
+</div>
+
 </body>
 </html>
