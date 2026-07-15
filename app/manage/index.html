@@ -18,6 +18,7 @@
     --display:'Space Grotesk',system-ui,sans-serif;
     --body:'Inter',system-ui,sans-serif;
     --r-sm:6px; --r-md:12px;
+    --on-brand:#06250f; /* text colour on brand-filled buttons; set per-company at runtime */
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--ink);color:var(--text);font-family:var(--body);min-height:100vh;-webkit-font-smoothing:antialiased}
@@ -33,11 +34,11 @@
   .hdr-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .lnk{font-family:var(--mono);font-size:12px;color:var(--text-2);border:1px solid var(--border-2);border-radius:999px;padding:8px 13px;cursor:pointer;background:none;min-height:36px;display:inline-flex;align-items:center}
   .lnk:hover{color:var(--text);border-color:var(--green)}
-  .lnk.pri{background:var(--green);color:#06250f;border-color:var(--green);font-weight:700}
+  .lnk.pri{background:var(--green);color:var(--on-brand);border-color:var(--green);font-weight:700}
 
   .tabs{display:flex;gap:8px;padding:14px 20px 0;flex-wrap:wrap}
   .tab{font-family:var(--mono);font-size:12px;padding:8px 15px;border-radius:999px;background:var(--ink-1);border:1px solid var(--border-2);color:var(--text-2);cursor:pointer;min-height:36px}
-  .tab.active{background:var(--green);color:#06250f;border-color:var(--green);font-weight:700}
+  .tab.active{background:var(--green);color:var(--on-brand);border-color:var(--green);font-weight:700}
   .wrap{padding:16px 20px 60px;max-width:1100px;margin:0 auto}
 
   .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
@@ -71,7 +72,7 @@
   .empty{color:var(--text-3);font-size:14px;padding:26px 0;text-align:center;font-family:var(--mono)}
   .filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
   .filters select,.filters input{background:var(--ink-1);border:1px solid var(--border-2);color:var(--text);padding:8px 10px;border-radius:var(--r-sm);font-family:var(--mono);font-size:12px;min-height:38px}
-  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--green);color:#06250f;padding:10px 18px;border-radius:8px;font-family:var(--mono);font-size:12px;font-weight:700;display:none;z-index:50}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--green);color:var(--on-brand);padding:10px 18px;border-radius:8px;font-family:var(--mono);font-size:12px;font-weight:700;display:none;z-index:50}
 </style>
 </head>
 <body>
@@ -80,9 +81,12 @@
 
 <div id="app">
   <header>
-    <div>
-      <div class="brand"><span class="slash">/</span>respec — manage</div>
-      <div class="who" id="who"></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <img id="co-logo" alt="" style="display:none;height:34px;width:34px;border-radius:8px;object-fit:cover">
+      <div>
+        <div class="brand" id="co-title"><span class="slash">/</span>respec — manage</div>
+        <div class="who" id="who"></div>
+      </div>
     </div>
     <div class="hdr-actions">
       <a class="lnk" href="/app/hud/" target="_blank" rel="noopener">HUD ↗</a>
@@ -145,14 +149,37 @@ let company = null, role = null, orders = [];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const toast = (m) => { const t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',1600); };
 
+/* Apply the company's own branding. Falls back to the Respec green if a
+   company hasn't set one, so an unbranded tenant still looks intentional. */
+function applyBrand(co) {
+  const color = (co.brand_color || '').trim();
+  if (/^#[0-9a-f]{6}$/i.test(color)) {
+    const r = parseInt(color.slice(1,3),16), g = parseInt(color.slice(3,5),16), b = parseInt(color.slice(5,7),16);
+    const root = document.documentElement.style;
+    root.setProperty('--green', color);
+    root.setProperty('--green-dim', `rgba(${r},${g},${b},0.10)`);
+    // Keep button text readable on light brand colours.
+    const lum = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
+    root.setProperty('--on-brand', lum > 0.6 ? '#0b1220' : '#06250f');
+  }
+  document.getElementById('co-title').innerHTML =
+    `<span class="slash">/</span>${esc(co.name || 'respec')} — manage`;
+  document.title = `${co.name || 'Manage'} | Respec`;
+  if (co.logo_url) {
+    const img = document.getElementById('co-logo');
+    img.src = co.logo_url; img.alt = co.name || ''; img.style.display = 'block';
+  }
+}
+
 /* ---- Auth guard ---- */
 async function guard() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) { location.replace('/login/'); return false; }
   const { data: mine, error } = await supabase.from('my_company')
-    .select('company_code, name, role').maybeSingle();
+    .select('company_code, name, role, brand_color, logo_url').maybeSingle();
   if (error || !mine) { await supabase.auth.signOut(); location.replace('/login/'); return false; }
   company = mine; role = mine.role;
+  applyBrand(mine);
   document.getElementById('who').innerHTML =
     `${esc(session.user.email)} · <b>${esc(mine.company_code)}</b> · ${esc(role)}`;
   document.getElementById('new-order').href = '/app/intake/?c=' + encodeURIComponent(mine.company_code);
