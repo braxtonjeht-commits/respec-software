@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage | Respec Software</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#07080A; --ink-1:#0F1115; --ink-2:#161A20;
+    --border:rgba(255,255,255,0.07); --border-2:rgba(255,255,255,0.12);
+    --green:#4ade80; --green-dim:rgba(74,222,128,0.08);
+    --text:#E2E8F0; --text-2:#94A3B8; --text-3:#8B97AB;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+    --display:'Space Grotesk',system-ui,sans-serif;
+    --body:'Inter',system-ui,sans-serif;
+    --r-sm:6px; --r-md:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--ink);color:var(--text);font-family:var(--body);min-height:100vh;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  #gate{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:var(--mono);font-size:13px;color:var(--text-3)}
+  #app{display:none}
+
+  header{border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;position:sticky;top:0;background:rgba(7,8,10,.9);backdrop-filter:blur(12px);z-index:10}
+  .brand{font-family:var(--mono);font-weight:700;font-size:16px}
+  .brand .slash{color:var(--green)}
+  .who{font-family:var(--mono);font-size:11px;color:var(--text-3);margin-top:2px}
+  .who b{color:var(--green);font-weight:700}
+  .hdr-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .lnk{font-family:var(--mono);font-size:12px;color:var(--text-2);border:1px solid var(--border-2);border-radius:999px;padding:8px 13px;cursor:pointer;background:none;min-height:36px;display:inline-flex;align-items:center}
+  .lnk:hover{color:var(--text);border-color:var(--green)}
+  .lnk.pri{background:var(--green);color:#06250f;border-color:var(--green);font-weight:700}
+
+  .tabs{display:flex;gap:8px;padding:14px 20px 0;flex-wrap:wrap}
+  .tab{font-family:var(--mono);font-size:12px;padding:8px 15px;border-radius:999px;background:var(--ink-1);border:1px solid var(--border-2);color:var(--text-2);cursor:pointer;min-height:36px}
+  .tab.active{background:var(--green);color:#06250f;border-color:var(--green);font-weight:700}
+  .wrap{padding:16px 20px 60px;max-width:1100px;margin:0 auto}
+
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .stat{background:var(--ink-1);border:1px solid var(--border);border-radius:10px;padding:10px 14px;min-width:88px}
+  .stat .n{font-family:var(--display);font-size:19px;font-weight:700;color:var(--green)}
+  .stat .l{font-family:var(--mono);font-size:10px;color:var(--text-3);letter-spacing:.04em}
+
+  .order{background:var(--ink-1);border:1px solid var(--border);border-radius:var(--r-md);padding:15px;margin-bottom:10px}
+  .o-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+  .oid{font-family:var(--mono);font-size:13px;font-weight:700}
+  .oname{font-size:14px}
+  .ometa{font-size:12px;color:var(--text-3);margin-top:2px}
+  .badge{font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:20px;font-weight:700;border:1px solid var(--border-2);color:var(--text-2)}
+  .badge.b-new{background:rgba(148,163,184,.15);color:#94A3B8}
+  .badge.b-diag{background:rgba(96,165,250,.15);color:#60a5fa}
+  .badge.b-wait{background:rgba(249,115,22,.15);color:#f97316}
+  .badge.b-prog{background:rgba(74,222,128,.15);color:var(--green)}
+  .badge.b-done{background:rgba(148,163,184,.15);color:#94A3B8}
+  .badge.pub{background:rgba(96,165,250,.12);color:#60a5fa}
+  .o-ctl{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+  select.status{background:var(--ink-2);border:1px solid var(--border-2);color:var(--text);padding:8px 10px;border-radius:var(--r-sm);font-family:var(--mono);font-size:12px;min-height:38px}
+  select.status:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+  .paid-btn{font-family:var(--mono);font-size:11px;padding:8px 12px;border-radius:999px;border:1px solid var(--border-2);background:none;color:var(--text-2);cursor:pointer;min-height:36px}
+  .paid-btn.on{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+
+  .ev{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap;align-items:baseline}
+  .ev-when{font-family:var(--mono);font-size:11px;color:var(--text-3);min-width:132px}
+  .ev-who{font-family:var(--mono);font-size:11.5px;color:var(--green);min-width:180px}
+  .ev-what{color:var(--text-2)}
+  .ev-what b{color:var(--text);font-weight:600}
+  .empty{color:var(--text-3);font-size:14px;padding:26px 0;text-align:center;font-family:var(--mono)}
+  .filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .filters select,.filters input{background:var(--ink-1);border:1px solid var(--border-2);color:var(--text);padding:8px 10px;border-radius:var(--r-sm);font-family:var(--mono);font-size:12px;min-height:38px}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--green);color:#06250f;padding:10px 18px;border-radius:8px;font-family:var(--mono);font-size:12px;font-weight:700;display:none;z-index:50}
+</style>
+</head>
+<body>
+
+<div id="gate">Checking your session…</div>
+
+<div id="app">
+  <header>
+    <div>
+      <div class="brand"><span class="slash">/</span>respec — manage</div>
+      <div class="who" id="who"></div>
+    </div>
+    <div class="hdr-actions">
+      <a class="lnk" href="/app/hud/" target="_blank" rel="noopener">HUD ↗</a>
+      <a class="lnk pri" id="new-order" href="/app/intake/">+ New order</a>
+      <button class="lnk" id="signout">Sign out</button>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="orders">Orders</button>
+    <button class="tab" data-tab="audit" id="tab-audit" style="display:none">Audit log</button>
+  </div>
+
+  <div class="wrap">
+    <!-- ORDERS -->
+    <section id="pane-orders">
+      <div class="stats" id="stats"></div>
+      <div class="filters">
+        <select id="f-status">
+          <option value="">All statuses</option>
+        </select>
+        <input id="f-search" type="search" placeholder="Search name / order #">
+      </div>
+      <div id="orders"></div>
+    </section>
+
+    <!-- AUDIT (owners only) -->
+    <section id="pane-audit" style="display:none">
+      <div class="filters">
+        <select id="f-actor"><option value="">All employees</option></select>
+      </div>
+      <div id="events"></div>
+    </section>
+  </div>
+</div>
+
+<div class="toast" id="toast">Saved</div>
+
+<script type="module">
+/* Manage dashboard.
+   SECURITY: this page holds no data of its own. Every row comes from Supabase
+   under the signed-in user's session, and RLS returns only this company's rows.
+   The audit log is owner-only at the DATABASE level (RLS), so hiding the tab is
+   convenience — a member who forced it open would still receive zero rows. */
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const supabase = createClient(
+  'https://cnpyltipddxfjyucigxj.supabase.co',
+  'sb_publishable_KiFNYwFxTLG9wVSjFqJqjw__DWHWGQK',
+  { auth: { persistSession: true, autoRefreshToken: true } }
+);
+
+const STATUSES = ['New','Diagnosing','Waiting on Parts','In Progress','Complete','Shipped'];
+const BADGE = { 'New':'b-new','Diagnosing':'b-diag','Waiting on Parts':'b-wait','In Progress':'b-prog','Complete':'b-done','Shipped':'b-done' };
+
+const gate = document.getElementById('gate');
+const app  = document.getElementById('app');
+let company = null, role = null, orders = [];
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const toast = (m) => { const t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',1600); };
+
+/* ---- Auth guard ---- */
+async function guard() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { location.replace('/login/'); return false; }
+  const { data: mine, error } = await supabase.from('my_company')
+    .select('company_code, name, role').maybeSingle();
+  if (error || !mine) { await supabase.auth.signOut(); location.replace('/login/'); return false; }
+  company = mine; role = mine.role;
+  document.getElementById('who').innerHTML =
+    `${esc(session.user.email)} · <b>${esc(mine.company_code)}</b> · ${esc(role)}`;
+  document.getElementById('new-order').href = '/app/intake/?c=' + encodeURIComponent(mine.company_code);
+  if (role === 'owner') document.getElementById('tab-audit').style.display = '';
+  gate.style.display = 'none';
+  app.style.display = 'block';
+  return true;
+}
+
+/* ---- Orders ---- */
+async function loadOrders() {
+  const { data, error } = await supabase.from('orders')
+    .select('id, order_code, customer_name, customer_email, customer_phone, vehicle, service, status, paid, source, created_at')
+    .order('created_at', { ascending: false });
+  if (error) { document.getElementById('orders').innerHTML = '<p class="empty">Could not load orders.</p>'; return; }
+  orders = data || [];
+  renderStats();
+  renderOrders();
+}
+
+function renderStats() {
+  const open = orders.filter(o => !['Complete','Shipped'].includes(o.status)).length;
+  const unpaid = orders.filter(o => !o.paid).length;
+  document.getElementById('stats').innerHTML = [
+    ['Total', orders.length], ['Open', open], ['Unpaid', unpaid]
+  ].map(([l,n]) => `<div class="stat"><div class="n">${n}</div><div class="l">${l.toUpperCase()}</div></div>`).join('');
+}
+
+function renderOrders() {
+  const fs = document.getElementById('f-status').value;
+  const q  = document.getElementById('f-search').value.trim().toLowerCase();
+  const list = orders.filter(o =>
+    (!fs || o.status === fs) &&
+    (!q || (o.customer_name||'').toLowerCase().includes(q) || (o.order_code||'').toLowerCase().includes(q))
+  );
+  const el = document.getElementById('orders');
+  if (!list.length) { el.innerHTML = '<p class="empty">No orders yet.</p>'; return; }
+  el.innerHTML = list.map(o => `
+    <div class="order" data-id="${o.id}">
+      <div class="o-top">
+        <div>
+          <div class="oid">${esc(o.order_code)} ${o.source==='public' ? '<span class="badge pub">WEB</span>' : ''}</div>
+          <div class="oname">${esc(o.customer_name)}</div>
+          <div class="ometa">${esc([o.vehicle,o.service].filter(Boolean).join(' · '))}${o.customer_phone ? ' · ' + esc(o.customer_phone) : ''}</div>
+        </div>
+        <span class="badge ${BADGE[o.status]||''}">${esc(o.status)}</span>
+      </div>
+      <div class="o-ctl">
+        <select class="status" data-id="${o.id}">
+          ${STATUSES.map(s => `<option ${s===o.status?'selected':''}>${s}</option>`).join('')}
+        </select>
+        <button class="paid-btn ${o.paid?'on':''}" data-id="${o.id}" data-paid="${o.paid}">${o.paid ? '✓ Paid' : 'Mark paid'}</button>
+      </div>
+    </div>`).join('');
+}
+
+document.getElementById('orders').addEventListener('change', async (e) => {
+  const sel = e.target.closest('select.status');
+  if (!sel) return;
+  const { error } = await supabase.from('orders').update({ status: sel.value }).eq('id', sel.dataset.id);
+  if (error) { toast('Update failed'); return; }
+  toast('Status updated');
+  await loadOrders();
+  if (role === 'owner') loadEvents();
+});
+
+document.getElementById('orders').addEventListener('click', async (e) => {
+  const btn = e.target.closest('.paid-btn');
+  if (!btn) return;
+  const next = btn.dataset.paid !== 'true';
+  const { error } = await supabase.from('orders').update({ paid: next }).eq('id', btn.dataset.id);
+  if (error) { toast('Update failed'); return; }
+  toast(next ? 'Marked paid' : 'Marked unpaid');
+  await loadOrders();
+  if (role === 'owner') loadEvents();
+});
+
+document.getElementById('f-status').addEventListener('change', renderOrders);
+document.getElementById('f-search').addEventListener('input', renderOrders);
+
+/* ---- Audit log (owners) ---- */
+const ACTION_TEXT = {
+  created_staff:  'created the order',
+  created_public: 'order submitted from the web form',
+  status_changed: 'changed status',
+  paid_changed:   'changed payment',
+  notes_edited:   'edited notes'
+};
+
+async function loadEvents() {
+  const { data, error } = await supabase.from('order_events')
+    .select('id, order_code, actor_email, actor_name, action, from_value, to_value, created_at')
+    .order('created_at', { ascending: false }).limit(300);
+  const el = document.getElementById('events');
+  if (error) { el.innerHTML = '<p class="empty">Could not load the audit log.</p>'; return; }
+  const evs = data || [];
+
+  const actors = [...new Set(evs.map(e => e.actor_email).filter(Boolean))];
+  const sel = document.getElementById('f-actor');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All employees</option>' +
+    actors.map(a => `<option ${a===cur?'selected':''}>${esc(a)}</option>`).join('');
+
+  const filtered = cur ? evs.filter(e => e.actor_email === cur) : evs;
+  if (!filtered.length) { el.innerHTML = '<p class="empty">No activity yet.</p>'; return; }
+
+  el.innerHTML = filtered.map(e => {
+    const who = e.actor_email ? esc(e.actor_name || e.actor_email) : 'Customer (web form)';
+    let what = ACTION_TEXT[e.action] || esc(e.action);
+    if (e.action === 'status_changed') what = `changed <b>${esc(e.order_code)}</b> from <b>${esc(e.from_value)}</b> to <b>${esc(e.to_value)}</b>`;
+    else if (e.action === 'paid_changed') what = `marked <b>${esc(e.order_code)}</b> ${e.to_value === 'true' ? '<b>paid</b>' : '<b>unpaid</b>'}`;
+    else what = `${what} — <b>${esc(e.order_code)}</b>`;
+    return `<div class="ev">
+      <span class="ev-when">${new Date(e.created_at).toLocaleString()}</span>
+      <span class="ev-who">${who}</span>
+      <span class="ev-what">${what}</span>
+    </div>`;
+  }).join('');
+}
+document.getElementById('f-actor').addEventListener('change', loadEvents);
+
+/* ---- Tabs ---- */
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  const isAudit = t.dataset.tab === 'audit';
+  document.getElementById('pane-orders').style.display = isAudit ? 'none' : 'block';
+  document.getElementById('pane-audit').style.display  = isAudit ? 'block' : 'none';
+  if (isAudit) loadEvents();
+}));
+
+document.getElementById('signout').addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  location.replace('/login/');
+});
+supabase.auth.onAuthStateChange((e) => { if (e === 'SIGNED_OUT') location.replace('/login/'); });
+
+/* ---- Boot ---- */
+(async () => {
+  if (!(await guard())) return;
+  document.getElementById('f-status').innerHTML =
+    '<option value="">All statuses</option>' + STATUSES.map(s => `<option>${s}</option>`).join('');
+  await loadOrders();
+  // Live updates: RLS applies to realtime too.
+  supabase.channel('orders-live')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, loadOrders)
+    .subscribe();
+})();
+</script>
+</body>
+</html>

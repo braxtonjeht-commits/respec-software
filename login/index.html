@@ -240,14 +240,22 @@ function showHub(company) {
   hub.style.display = 'block';
   hubCompany.textContent = (company.company_code || '').toUpperCase();
 
-  const urls = { manage: company.manage_url, hud: company.hud_url, client: company.client_url };
+  // First-party multi-tenant apps on respecsoftware.com. Each one re-checks the
+  // session on load and reads data under RLS, so these URLs are useless to
+  // anyone who isn't signed in. A legacy *_url on the company row overrides,
+  // for any company still pointed at a standalone app.
+  const code = encodeURIComponent(company.company_code || '');
+  const urls = {
+    manage: company.manage_url || '/app/manage/',
+    hud:    company.hud_url    || '/app/hud/',
+    client: company.client_url || ('/app/intake/?c=' + code)
+  };
   for (const key of Object.keys(BOXES)) {
     const el = BOXES[key];
     if (urls[key]) {
       el.href = urls[key];
       el.style.display = '';
     } else {
-      // No URL provisioned for this company yet — hide rather than dead-link.
       el.removeAttribute('href');
       el.style.display = 'none';
     }

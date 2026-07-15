@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop HUD | Respec Software</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#07080A; --ink-1:#0F1115; --ink-2:#161A20;
+    --border:rgba(255,255,255,0.08);
+    --green:#4ade80; --text:#E2E8F0; --text-2:#94A3B8; --text-3:#8B97AB;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+    --display:'Space Grotesk',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--ink);color:var(--text);font-family:var(--mono);min-height:100vh;overflow-x:hidden}
+  #gate{display:flex;align-items:center;justify-content:center;min-height:100vh;font-size:14px;color:var(--text-3)}
+  #hud{display:none;padding:22px 26px}
+
+  .top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+  .co{font-family:var(--display);font-size:clamp(22px,2.4vw,34px);font-weight:700;letter-spacing:-.5px}
+  .co .slash{color:var(--green)}
+  .clock{font-size:clamp(16px,1.8vw,24px);color:var(--green);font-weight:700}
+  .live{font-size:11px;color:var(--text-3);letter-spacing:.08em;display:flex;align-items:center;gap:7px;margin-top:4px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:p 2s ease-in-out infinite}
+  @keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+
+  .stats{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+  .stat{background:var(--ink-1);border:1px solid var(--border);border-radius:12px;padding:12px 18px;min-width:110px}
+  .stat .n{font-family:var(--display);font-size:clamp(22px,2.6vw,32px);font-weight:700;color:var(--green)}
+  .stat .l{font-size:10px;color:var(--text-3);letter-spacing:.06em}
+
+  table{width:100%;border-collapse:collapse}
+  th{text-align:left;font-size:11px;color:var(--text-3);letter-spacing:.08em;padding:0 10px 10px;border-bottom:1px solid var(--border)}
+  td{padding:14px 10px;border-bottom:1px solid var(--border);font-size:clamp(13px,1.35vw,18px)}
+  .oid{font-weight:700}
+  .cust{color:var(--text-2)}
+  .st{font-weight:700;padding:5px 12px;border-radius:20px;font-size:clamp(11px,1.1vw,14px);display:inline-block}
+  .s-new{background:rgba(148,163,184,.15);color:#94A3B8}
+  .s-diag{background:rgba(96,165,250,.15);color:#60a5fa}
+  .s-wait{background:rgba(249,115,22,.15);color:#f97316}
+  .s-prog{background:rgba(74,222,128,.15);color:var(--green)}
+  .s-done{background:rgba(148,163,184,.15);color:#94A3B8}
+  .empty{text-align:center;color:var(--text-3);padding:60px 0;font-size:15px}
+  .bar{position:fixed;bottom:0;left:0;right:0;background:var(--ink-1);border-top:1px solid var(--border);
+    padding:9px 20px;font-size:11px;color:var(--text-3);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .bar a{color:var(--text-3)}
+  .bar a:hover{color:var(--green)}
+  body{padding-bottom:46px}
+</style>
+</head>
+<body>
+
+<div id="gate">Checking your session…</div>
+
+<div id="hud">
+  <div class="top">
+    <div>
+      <div class="co"><span class="slash">/</span><span id="co-name">—</span></div>
+      <div class="live"><span class="dot"></span><span id="live-txt">LIVE — updates automatically</span></div>
+    </div>
+    <div style="text-align:right">
+      <div class="clock" id="clock">--:--</div>
+      <div class="live" style="justify-content:flex-end" id="today"></div>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <table>
+    <thead><tr><th>ORDER</th><th>CUSTOMER</th><th>VEHICLE</th><th>STATUS</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div class="empty" id="empty" style="display:none">No active jobs on the board.</div>
+
+  <div class="bar">
+    <span id="who"></span>
+    <span><a href="/app/manage/">Manage</a> · <a href="#" id="signout">Sign out</a></span>
+  </div>
+</div>
+
+<script type="module">
+/* Shop-floor HUD — long-lived device session.
+   Signed in once on the wall display, it stays signed in: Supabase persists the
+   session and auto-refreshes the token, and we re-check on wake/reconnect so a
+   TV that sleeps overnight comes back without anyone touching it. Data is still
+   fully gated by RLS — this only avoids re-typing a password, it does not weaken
+   who can read what. */
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const supabase = createClient(
+  'https://cnpyltipddxfjyucigxj.supabase.co',
+  'sb_publishable_KiFNYwFxTLG9wVSjFqJqjw__DWHWGQK',
+  { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'respec-hud-session' } }
+);
+
+const ACTIVE = ['New','Diagnosing','Waiting on Parts','In Progress'];
+const CLS = { 'New':'s-new','Diagnosing':'s-diag','Waiting on Parts':'s-wait','In Progress':'s-prog','Complete':'s-done','Shipped':'s-done' };
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function guard() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { location.replace('/login/'); return false; }
+  const { data: mine, error } = await supabase.from('my_company').select('company_code, name').maybeSingle();
+  if (error || !mine) { await supabase.auth.signOut(); location.replace('/login/'); return false; }
+  document.getElementById('co-name').textContent = mine.name;
+  document.getElementById('who').textContent = session.user.email + ' · ' + mine.company_code;
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('hud').style.display = 'block';
+  return true;
+}
+
+async function load() {
+  const { data, error } = await supabase.from('orders')
+    .select('order_code, customer_name, vehicle, status, paid, created_at')
+    .order('created_at', { ascending: true });
+  if (error) { document.getElementById('live-txt').textContent = 'RECONNECTING…'; return; }
+  document.getElementById('live-txt').textContent = 'LIVE — updates automatically';
+  const all = data || [];
+  const active = all.filter(o => ACTIVE.includes(o.status));
+
+  document.getElementById('stats').innerHTML = [
+    ['ACTIVE', active.length],
+    ['WAITING', all.filter(o => o.status === 'Waiting on Parts').length],
+    ['IN PROGRESS', all.filter(o => o.status === 'In Progress').length],
+    ['DONE TODAY', all.filter(o => ['Complete','Shipped'].includes(o.status) &&
+        new Date(o.created_at).toDateString() === new Date().toDateString()).length]
+  ].map(([l,n]) => `<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+
+  const rows = document.getElementById('rows');
+  document.getElementById('empty').style.display = active.length ? 'none' : 'block';
+  rows.innerHTML = active.map(o => `
+    <tr>
+      <td class="oid">${esc(o.order_code)}</td>
+      <td class="cust">${esc(o.customer_name)}</td>
+      <td class="cust">${esc(o.vehicle || '—')}</td>
+      <td><span class="st ${CLS[o.status]||''}">${esc(o.status)}</span></td>
+    </tr>`).join('');
+}
+
+function tick() {
+  const d = new Date();
+  document.getElementById('clock').textContent = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  document.getElementById('today').textContent = d.toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'}).toUpperCase();
+}
+
+document.getElementById('signout').addEventListener('click', async (e) => {
+  e.preventDefault();
+  await supabase.auth.signOut();
+  location.replace('/login/');
+});
+supabase.auth.onAuthStateChange((e) => { if (e === 'SIGNED_OUT') location.replace('/login/'); });
+
+(async () => {
+  if (!(await guard())) return;
+  tick(); setInterval(tick, 1000);
+  await load();
+
+  supabase.channel('hud-live')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, load)
+    .subscribe();
+
+  // Safety nets for an always-on TV: poll slowly, and refresh on wake/reconnect.
+  setInterval(load, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+  window.addEventListener('online', load);
+})();
+</script>
+</body>
+</html>

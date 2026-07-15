@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Submit an Order | Respec Software</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#07080A; --ink-1:#0F1115; --ink-2:#161A20;
+    --border:rgba(255,255,255,0.07); --border-2:rgba(255,255,255,0.12);
+    --green:#4ade80; --green-dim:rgba(74,222,128,0.08);
+    --text:#E2E8F0; --text-2:#94A3B8; --text-3:#8B97AB;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+    --display:'Space Grotesk',system-ui,sans-serif;
+    --body:'Inter',system-ui,sans-serif;
+    --r-sm:6px; --r-md:12px; --r-lg:20px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--ink);color:var(--text);font-family:var(--body);min-height:100vh;padding:24px;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:560px;margin:0 auto}
+  .brand{font-family:var(--mono);font-weight:700;font-size:17px;margin:8px 0 4px}
+  .brand .slash{color:var(--green)}
+  .co{font-family:var(--mono);font-size:12px;color:var(--green);letter-spacing:.06em;margin-bottom:24px}
+  .card{background:var(--ink-1);border:1px solid var(--border);border-radius:var(--r-lg);padding:30px}
+  h1{font-family:var(--display);font-size:23px;font-weight:700;margin-bottom:8px;letter-spacing:-.3px}
+  .sub{color:var(--text-2);font-size:14px;margin-bottom:24px}
+  .field{margin-bottom:15px}
+  .field label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:6px}
+  .req{color:var(--green)}
+  .field input,.field select,.field textarea{
+    width:100%;background:var(--ink-2);border:1px solid var(--border-2);border-radius:var(--r-sm);
+    color:var(--text);font-family:var(--body);font-size:15px;padding:12px 13px;outline:none;transition:border-color .15s}
+  .field input:focus-visible,.field select:focus-visible,.field textarea:focus-visible{outline:2px solid var(--green);outline-offset:2px;border-color:var(--green)}
+  .field input::placeholder,.field textarea::placeholder{color:var(--text-3);opacity:1}
+  .field textarea{min-height:96px;resize:vertical}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:520px){.row{grid-template-columns:1fr}}
+  .err{display:none;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);color:#fca5a5;font-size:13px;border-radius:var(--r-sm);padding:10px 12px;margin-bottom:14px}
+  .err.show{display:block}
+  .btn{width:100%;background:var(--green);color:#06250f;border:none;border-radius:999px;font-family:var(--mono);font-weight:700;font-size:14px;padding:14px 20px;cursor:pointer;margin-top:6px}
+  .btn:hover{opacity:.9}
+  .btn:disabled{opacity:.6;cursor:wait}
+  .ok{display:none;text-align:center;padding:16px 0}
+  .ok .check{width:58px;height:58px;border-radius:50%;background:var(--green-dim);border:1px solid rgba(74,222,128,.3);display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--green);margin:0 auto 18px}
+  .ok .code{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--green);margin:14px 0}
+  .ok p{color:var(--text-2);font-size:14px}
+  .note{margin-top:18px;text-align:center;font-size:12.5px;color:var(--text-3)}
+  .staff{display:none;background:var(--green-dim);border:1px solid rgba(74,222,128,.3);border-radius:var(--r-sm);
+    font-family:var(--mono);font-size:11.5px;color:var(--green);padding:9px 12px;margin-bottom:18px;letter-spacing:.04em}
+  .staff.show{display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="brand"><span class="slash">/</span>respec</p>
+  <p class="co" id="co-name">Loading…</p>
+
+  <section class="card" id="form-card">
+    <div class="staff" id="staff-badge">◉ STAFF MODE — this order will be logged under your name</div>
+    <h1>Submit an order</h1>
+    <p class="sub">Tell us what you need. You'll get an order number to reference.</p>
+
+    <div class="err" id="err"></div>
+
+    <form id="intake-form" novalidate>
+      <div class="field">
+        <label for="name">Your name <span class="req" aria-hidden="true">*</span></label>
+        <input id="name" type="text" autocomplete="name" placeholder="John Smith" required>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" autocomplete="email" placeholder="john@email.com">
+        </div>
+        <div class="field">
+          <label for="phone">Phone</label>
+          <input id="phone" type="tel" autocomplete="tel" placeholder="(254) 555-0100">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="vehicle">Vehicle</label>
+          <input id="vehicle" type="text" placeholder="2019 Ford F-150">
+        </div>
+        <div class="field">
+          <label for="service">Service needed</label>
+          <select id="service">
+            <option>ECU Repair</option>
+            <option>Custom Tune</option>
+            <option>Diagnostic</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="notes">Describe the issue</label>
+        <textarea id="notes" placeholder="What's going on?"></textarea>
+      </div>
+      <button type="submit" class="btn" id="submit-btn">Submit order →</button>
+    </form>
+    <p class="note" id="back-note"></p>
+  </section>
+
+  <section class="card ok" id="ok">
+    <div class="check" aria-hidden="true">✓</div>
+    <h1 style="text-align:center">Order submitted</h1>
+    <p>Your order number:</p>
+    <div class="code" id="ok-code">—</div>
+    <p>Keep this number to reference your order.</p>
+    <p class="note"><a href="#" id="another" style="color:var(--green)">Submit another order</a></p>
+  </section>
+</div>
+
+<script type="module">
+/* Public intake. Uses ONLY the submit_public_order RPC — the anon role has
+   no read or direct write access to the orders table, so this page can never
+   expose another customer's information. If a staff member is signed in, the
+   order is attributed to them instead of being recorded as public. */
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = 'https://cnpyltipddxfjyucigxj.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_KiFNYwFxTLG9wVSjFqJqjw__DWHWGQK';
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+const params  = new URLSearchParams(location.search);
+const code    = (params.get('c') || '').trim().toUpperCase();
+const form    = document.getElementById('intake-form');
+const err     = document.getElementById('err');
+const btn     = document.getElementById('submit-btn');
+const okCard  = document.getElementById('ok');
+const formCard= document.getElementById('form-card');
+const coName  = document.getElementById('co-name');
+
+const showErr = (m) => { err.textContent = m; err.classList.add('show'); };
+
+let staffCompanyId = null;   // set when a signed-in staff member is using it
+
+async function init() {
+  // Staff mode: signed-in user submitting on a customer's behalf.
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    const { data: mine } = await supabase.from('my_company')
+      .select('company_code, name').maybeSingle();
+    if (mine && (!code || mine.company_code === code)) {
+      staffCompanyId = mine.company_code;
+      document.getElementById('staff-badge').classList.add('show');
+      coName.textContent = mine.name;
+      document.getElementById('back-note').innerHTML =
+        '<a href="/app/manage/" style="color:var(--green)">← Back to dashboard</a>';
+      return;
+    }
+  }
+
+  if (!code) {
+    coName.textContent = '';
+    formCard.style.display = 'none';
+    showErr('This link is missing a company code. Ask the shop for their intake link.');
+    err.classList.add('show');
+    document.querySelector('.wrap').appendChild(err);
+    return;
+  }
+
+  const { data, error } = await supabase.rpc('public_company_info', { p_company_code: code });
+  const co = Array.isArray(data) ? data[0] : data;
+  if (error || !co) {
+    coName.textContent = '';
+    formCard.style.display = 'none';
+    document.querySelector('.wrap').appendChild(err);
+    showErr('We couldn’t find that shop. Double-check the link you were given.');
+    return;
+  }
+  coName.textContent = co.name;
+}
+init();
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  err.classList.remove('show');
+  const name = document.getElementById('name').value.trim();
+  if (!name) { showErr('Please enter your name.'); return; }
+
+  const targetCode = staffCompanyId || code;
+  if (!targetCode) { showErr('Missing company code.'); return; }
+
+  btn.disabled = true;
+  const label = btn.textContent;
+  btn.textContent = 'Submitting…';
+
+  try {
+    const { data, error } = await supabase.rpc('submit_public_order', {
+      p_company_code:  targetCode,
+      p_customer_name: name,
+      p_customer_email: document.getElementById('email').value.trim() || null,
+      p_customer_phone: document.getElementById('phone').value.trim() || null,
+      p_vehicle:       document.getElementById('vehicle').value.trim() || null,
+      p_service:       document.getElementById('service').value || null,
+      p_notes:         document.getElementById('notes').value.trim() || null
+    });
+    if (error) throw error;
+    document.getElementById('ok-code').textContent = data;
+    formCard.style.display = 'none';
+    okCard.style.display = 'block';
+  } catch (e2) {
+    showErr('Something went wrong submitting that. Try again, or call the shop.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = label;
+  }
+});
+
+document.getElementById('another').addEventListener('click', (e) => {
+  e.preventDefault();
+  form.reset();
+  okCard.style.display = 'none';
+  formCard.style.display = 'block';
+});
+</script>
+</body>
+</html>
