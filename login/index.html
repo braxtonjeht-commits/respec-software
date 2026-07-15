@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Client Sign In | Respec Software</title>
+<meta name="description" content="Sign in to your Respec Software client dashboard, HUD, and tools.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="canonical" href="https://respecsoftware.com/login/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:        #07080A;
+    --ink-1:      #0F1115;
+    --ink-2:      #161A20;
+    --border:     rgba(255,255,255,0.07);
+    --border-2:   rgba(255,255,255,0.12);
+    --green:      #4ade80;
+    --green-dim:  rgba(74,222,128,0.08);
+    --green-glow: rgba(74,222,128,0.15);
+    --text:       #E2E8F0;
+    --text-2:     #94A3B8;
+    --text-3:     #8B97AB;
+    --mono:       'JetBrains Mono', ui-monospace, monospace;
+    --display:    'Space Grotesk', system-ui, sans-serif;
+    --body:       'Inter', system-ui, sans-serif;
+    --r-sm: 6px; --r-md: 12px; --r-lg: 20px;
+    --shadow-card: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.25);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--ink); color:var(--text); font-family:var(--body);
+    -webkit-font-smoothing:antialiased; min-height:100vh;
+    display:flex; flex-direction:column;
+  }
+  a{color:inherit; text-decoration:none}
+
+  /* faint grid backdrop, same language as the homepage hero */
+  .bg-grid{position:fixed; inset:0; z-index:0; opacity:.5; pointer-events:none;
+    background-image:
+      linear-gradient(rgba(74,222,128,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(74,222,128,0.05) 1px, transparent 1px);
+    background-size:42px 42px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 40%, transparent 80%);
+  }
+
+  header.top{position:relative; z-index:1; padding:22px 24px}
+  .logo{font-family:var(--mono); font-weight:700; font-size:18px; letter-spacing:-.2px}
+  .logo .slash{color:var(--green)}
+
+  main{position:relative; z-index:1; flex:1; display:flex; align-items:center; justify-content:center; padding:24px}
+
+  .card{
+    width:100%; max-width:420px; background:var(--ink-1);
+    border:1px solid var(--border); border-radius:var(--r-lg);
+    box-shadow:var(--shadow-card); padding:34px 30px;
+  }
+  .eyebrow{font-family:var(--mono); font-weight:700; font-size:11px; letter-spacing:2px; text-transform:uppercase;
+    color:var(--green); display:flex; align-items:center; gap:9px; margin-bottom:16px}
+  .eyebrow::before{content:""; width:20px; height:1px; background:var(--green)}
+  h1{font-family:var(--display); font-weight:700; font-size:26px; letter-spacing:-.4px; margin-bottom:8px}
+  .sub{color:var(--text-2); font-size:14px; line-height:1.5; margin-bottom:26px}
+
+  .field{margin-bottom:16px}
+  .field label{display:block; font-family:var(--mono); font-size:11px; letter-spacing:.5px; text-transform:uppercase;
+    color:var(--text-3); margin-bottom:7px}
+  .field input{
+    width:100%; background:var(--ink-2); border:1px solid var(--border-2); border-radius:var(--r-sm);
+    color:var(--text); font-family:var(--body); font-size:15px; padding:12px 13px; outline:none;
+    transition:border-color .15s;
+  }
+  .field input:focus{border-color:var(--green)}
+  .field input::placeholder{color:var(--text-3)}
+
+  .err{display:none; background:rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.3);
+    color:#fca5a5; font-size:13px; border-radius:var(--r-sm); padding:10px 12px; margin-bottom:16px}
+  .err.show{display:block}
+
+  .btn{
+    width:100%; background:var(--green); color:#06250f; border:none; border-radius:999px;
+    font-family:var(--mono); font-weight:800; font-size:14px; letter-spacing:.3px;
+    padding:14px 20px; cursor:pointer; transition:.15s; margin-top:6px;
+  }
+  .btn:hover{opacity:.9}
+  .btn:active{transform:scale(.98)}
+  .btn:disabled{opacity:.6; cursor:wait}
+
+  .foot-note{margin-top:20px; text-align:center; font-size:13px; color:var(--text-2)}
+  .foot-note a{color:var(--green)}
+  .back-home{display:block; text-align:center; margin-top:14px; font-size:12.5px; color:var(--text-3)}
+
+  /* ---------- HUB (post sign-in) ---------- */
+  #hub{display:none}
+  .hub-card{width:100%; max-width:640px}
+  .hub-head{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:26px; gap:12px; flex-wrap:wrap}
+  .hub-welcome{font-family:var(--display); font-weight:700; font-size:24px; letter-spacing:-.3px}
+  .hub-company{font-family:var(--mono); font-size:12px; color:var(--green); margin-top:4px}
+  .signout{font-family:var(--mono); font-size:12px; color:var(--text-3); border:1px solid var(--border-2);
+    border-radius:999px; padding:8px 14px; cursor:pointer; background:none}
+  .signout:hover{color:var(--text)}
+
+  .boxes{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+  @media (max-width:560px){ .boxes{grid-template-columns:1fr} }
+  .box{
+    background:var(--ink-2); border:1px solid var(--border-2); border-radius:var(--r-md);
+    padding:22px 18px; cursor:pointer; transition:.15s; display:flex; flex-direction:column; gap:8px;
+  }
+  .box:hover{border-color:var(--green); background:var(--green-dim); transform:translateY(-2px)}
+  .box-icon{width:34px; height:34px; border-radius:9px; background:var(--green-dim); border:1px solid var(--green-glow);
+    display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-weight:800; color:var(--green); font-size:15px}
+  .box-title{font-family:var(--display); font-weight:700; font-size:17px}
+  .box-desc{font-size:12.5px; color:var(--text-2); line-height:1.4}
+</style>
+</head>
+<body>
+
+<div class="bg-grid" aria-hidden="true"></div>
+
+<header class="top">
+  <a href="/" class="logo"><span class="slash">/</span>respec</a>
+</header>
+
+<main>
+
+  <!-- ============ LOGIN FORM ============ -->
+  <section class="card" id="login-card">
+    <p class="eyebrow">Client Portal</p>
+    <h1>Sign in to Respec</h1>
+    <p class="sub">Access your dashboard, live HUD, and client tools with your company account.</p>
+
+    <div class="err" id="err">Enter your username, password, and Company ID to continue.</div>
+
+    <form id="login-form" novalidate>
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username" placeholder="you@yourshop.com">
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <div class="field">
+        <label for="companyId">Company ID</label>
+        <input id="companyId" name="companyId" type="text" autocomplete="off" placeholder="e.g. RELENTLESS-TX" style="text-transform:uppercase">
+      </div>
+      <button type="submit" class="btn">Sign In →</button>
+    </form>
+
+    <p class="foot-note">Don't have access yet? <a href="/#contact">Contact your Respec rep</a></p>
+    <a href="/" class="back-home">← Back to respecsoftware.com</a>
+  </section>
+
+  <!-- ============ POST-LOGIN HUB ============ -->
+  <section class="card hub-card" id="hub">
+    <div class="hub-head">
+      <div>
+        <div class="hub-welcome">Welcome back</div>
+        <div class="hub-company" id="hub-company">COMPANY</div>
+      </div>
+      <button class="signout" id="signout">Sign out</button>
+    </div>
+
+    <div class="boxes">
+      <a class="box" id="box-manage" href="#">
+        <div class="box-icon">M</div>
+        <div class="box-title">Manage</div>
+        <div class="box-desc">Run your order dashboard — advance jobs, view history.</div>
+      </a>
+      <a class="box" id="box-hud" href="#" target="_blank" rel="noopener">
+        <div class="box-icon">H</div>
+        <div class="box-title">HUD</div>
+        <div class="box-desc">Open the live shop-floor display for your wall screen.</div>
+      </a>
+      <a class="box" id="box-client" href="#" target="_blank" rel="noopener">
+        <div class="box-icon">C</div>
+        <div class="box-title">Client</div>
+        <div class="box-desc">Your customer-facing intake &amp; order form.</div>
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<script type="module">
+/* =====================================================================
+   REAL AUTH — Supabase Auth + multi-tenant company lookup.
+   ---------------------------------------------------------------------
+   Access requires BOTH a valid Supabase Auth credential AND that the
+   typed Company ID matches the company the user actually belongs to
+   (company_users row). Company ID alone never grants access; a mismatch
+   is treated as a failed login and the session is torn down.
+
+   RLS on companies/company_users restricts every read to the caller's
+   own company, so this key is safe client-side.
+   ===================================================================== */
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = 'https://cnpyltipddxfjyucigxj.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_KiFNYwFxTLG9wVSjFqJqjw__DWHWGQK';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+const loginCard = document.getElementById('login-card');
+const hub       = document.getElementById('hub');
+const form      = document.getElementById('login-form');
+const err       = document.getElementById('err');
+const hubCompany = document.getElementById('hub-company');
+const submitBtn = form.querySelector('.btn');
+
+const BOXES = {
+  manage: document.getElementById('box-manage'),
+  hud:    document.getElementById('box-hud'),
+  client: document.getElementById('box-client')
+};
+
+function showError(msg) {
+  err.textContent = msg;
+  err.classList.add('show');
+}
+function clearError() {
+  err.classList.remove('show');
+}
+
+/* Fetch the signed-in user's company (RLS returns only their own row). */
+async function loadMyCompany() {
+  const { data, error } = await supabase
+    .from('my_company')
+    .select('company_code, name, manage_url, hud_url, client_url')
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+function showHub(company) {
+  loginCard.style.display = 'none';
+  hub.style.display = 'block';
+  hubCompany.textContent = (company.company_code || '').toUpperCase();
+
+  const urls = { manage: company.manage_url, hud: company.hud_url, client: company.client_url };
+  for (const key of Object.keys(BOXES)) {
+    const el = BOXES[key];
+    if (urls[key]) {
+      el.href = urls[key];
+      el.style.display = '';
+    } else {
+      // No URL provisioned for this company yet — hide rather than dead-link.
+      el.removeAttribute('href');
+      el.style.display = 'none';
+    }
+  }
+}
+
+function showLogin() {
+  hub.style.display = 'none';
+  loginCard.style.display = 'block';
+}
+
+/* Restore a real Supabase session on reload. */
+async function restoreSession() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { showLogin(); return; }
+  try {
+    const company = await loadMyCompany();
+    if (!company) { await supabase.auth.signOut(); showLogin(); return; }
+    showHub(company);
+  } catch (e) {
+    await supabase.auth.signOut();
+    showLogin();
+  }
+}
+restoreSession();
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username  = document.getElementById('username').value.trim();
+  const password  = document.getElementById('password').value;
+  const companyId = document.getElementById('companyId').value.trim().toUpperCase();
+
+  if (!username || !password || !companyId) {
+    showError('Enter your username, password, and Company ID to continue.');
+    return;
+  }
+  clearError();
+  submitBtn.disabled = true;
+  const originalLabel = submitBtn.textContent;
+  submitBtn.textContent = 'Signing in…';
+
+  try {
+    // 1. Authenticate. The "Username" field carries the email.
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: username,
+      password: password
+    });
+    if (authError) {
+      showError('Incorrect username, password, or Company ID.');
+      return;
+    }
+
+    // 2. Resolve the company this user actually belongs to.
+    let company;
+    try {
+      company = await loadMyCompany();
+    } catch (lookupError) {
+      await supabase.auth.signOut();
+      showError('Could not verify your company access. Contact your Respec rep.');
+      return;
+    }
+
+    if (!company) {
+      await supabase.auth.signOut();
+      showError('Your account is not linked to a company yet. Contact your Respec rep.');
+      return;
+    }
+
+    // 3. Typed Company ID must agree with real membership, else fail the login.
+    if ((company.company_code || '').toUpperCase() !== companyId) {
+      await supabase.auth.signOut();
+      showError('Incorrect username, password, or Company ID.');
+      return;
+    }
+
+    clearError();
+    form.reset();
+    showHub(company);
+  } catch (e) {
+    showError('Something went wrong signing in. Try again, or contact your Respec rep.');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalLabel;
+  }
+});
+
+document.getElementById('signout').addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  form.reset();
+  clearError();
+  showLogin();
+});
+
+/* Keep UI in sync if the session ends elsewhere (expiry, other tab). */
+supabase.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_OUT') showLogin();
+});
+</script>
+</body>
+</html>
