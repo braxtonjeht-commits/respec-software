@@ -73,6 +73,40 @@
   .filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
   .filters select,.filters input{background:var(--ink-1);border:1px solid var(--border-2);color:var(--text);padding:8px 10px;border-radius:var(--r-sm);font-family:var(--mono);font-size:12px;min-height:38px}
   .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--green);color:var(--on-brand);padding:10px 18px;border-radius:8px;font-family:var(--mono);font-size:12px;font-weight:700;display:none;z-index:50}
+
+  /* ---- order detail drawer ---- */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:100}
+  .overlay.show{display:flex}
+  @media(min-width:720px){ .overlay{align-items:center} }
+  .sheet{background:var(--ink-1);border:1px solid var(--border);border-radius:16px 16px 0 0;width:100%;max-width:620px;max-height:88vh;overflow-y:auto;padding:22px}
+  @media(min-width:720px){ .sheet{border-radius:16px} }
+  .sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
+  .sheet-title{font-family:var(--mono);font-weight:700;font-size:15px}
+  .sheet-sub{font-size:13px;color:var(--text-2);margin-top:3px}
+  .close-x{background:rgba(255,255,255,.06);border:none;color:var(--text);width:34px;height:34px;border-radius:50%;font-size:15px;cursor:pointer;flex-shrink:0}
+  .sect{margin-bottom:18px}
+  .sect-h{font-family:var(--mono);font-size:10.5px;color:var(--green);letter-spacing:.08em;text-transform:uppercase;margin-bottom:9px}
+  .kv{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+  .kv .k{color:var(--text-3)}
+  textarea.ta{width:100%;background:var(--ink-2);border:1px solid var(--border-2);border-radius:var(--r-sm);color:var(--text);
+    font-family:var(--body);font-size:14px;padding:11px 12px;min-height:78px;resize:vertical}
+  textarea.ta:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+  .hint{font-size:11.5px;color:var(--text-3);margin-top:6px}
+  .act{font-family:var(--mono);font-size:12px;font-weight:700;padding:10px 16px;border-radius:999px;border:none;cursor:pointer;background:var(--green);color:var(--on-brand);margin-top:9px}
+  .act.ghost{background:none;border:1px solid var(--border-2);color:var(--text-2);font-weight:500}
+  .act:disabled{opacity:.6;cursor:wait}
+  .msg{border-left:2px solid var(--border-2);padding:8px 0 8px 11px;margin-bottom:9px}
+  .msg-top{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:10.5px;color:var(--text-3);flex-wrap:wrap}
+  .msg-body{font-size:13px;color:var(--text-2);margin-top:4px}
+  .pill{font-family:var(--mono);font-size:9.5px;padding:2px 7px;border-radius:20px;border:1px solid var(--border-2)}
+  .pill.ok{color:var(--green);border-color:rgba(74,222,128,.4)}
+  .pill.warn{color:#f97316;border-color:rgba(249,115,22,.4)}
+  .pill.bad{color:#ef4444;border-color:rgba(239,68,68,.4)}
+  .switch{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--ink-2);border:1px solid var(--border-2);border-radius:var(--r-sm);padding:10px 12px;font-size:13px}
+  .tg{width:42px;height:23px;border-radius:20px;background:rgba(255,255,255,.15);position:relative;cursor:pointer;flex-shrink:0;border:none}
+  .tg.on{background:var(--green)}
+  .tg::after{content:'';position:absolute;width:19px;height:19px;border-radius:50%;background:#fff;top:2px;left:2px;transition:.15s}
+  .tg.on::after{left:21px}
 </style>
 </head>
 <body>
@@ -123,6 +157,53 @@
   </div>
 </div>
 
+<!-- ORDER DETAIL -->
+<div class="overlay" id="overlay">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="sheet-head">
+      <div>
+        <div class="sheet-title" id="sheet-title">—</div>
+        <div class="sheet-sub" id="sheet-sub"></div>
+      </div>
+      <button class="close-x" id="close-sheet" aria-label="Close">✕</button>
+    </div>
+
+    <div class="sect">
+      <div class="sect-h">Customer</div>
+      <div id="d-customer"></div>
+    </div>
+
+    <div class="sect">
+      <div class="sect-h">Shop notes</div>
+      <textarea class="ta" id="d-notes" placeholder="Internal notes (not sent to the customer)…"></textarea>
+      <div class="hint">Internal only — the customer never sees this. Edits are recorded in the audit log.</div>
+      <button class="act" id="save-notes">Save notes</button>
+    </div>
+
+    <div class="sect">
+      <div class="sect-h">Customer notifications</div>
+      <div class="switch">
+        <span>Email the customer when status changes</span>
+        <button class="tg" id="d-notify" aria-label="Toggle customer notifications"></button>
+      </div>
+      <div class="hint" id="notify-hint"></div>
+    </div>
+
+    <div class="sect">
+      <div class="sect-h">Send message to customer</div>
+      <textarea class="ta" id="d-msg" placeholder="Type a message to send to the customer…"></textarea>
+      <button class="act" id="send-msg">✉ Send</button>
+      <button class="act ghost" id="clear-msg">Clear</button>
+      <div class="hint" id="send-hint"></div>
+    </div>
+
+    <div class="sect">
+      <div class="sect-h">Message history</div>
+      <div id="d-msgs"></div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast">Saved</div>
 
 <script type="module">
@@ -144,7 +225,7 @@ const BADGE = { 'New':'b-new','Diagnosing':'b-diag','Waiting on Parts':'b-wait',
 
 const gate = document.getElementById('gate');
 const app  = document.getElementById('app');
-let company = null, role = null, orders = [];
+let company = null, role = null, orders = [], companyId = null;
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const toast = (m) => { const t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',1600); };
@@ -176,9 +257,9 @@ async function guard() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) { location.replace('/login/'); return false; }
   const { data: mine, error } = await supabase.from('my_company')
-    .select('company_code, name, role, brand_color, logo_url').maybeSingle();
+    .select('id, company_code, name, role, brand_color, logo_url').maybeSingle();
   if (error || !mine) { await supabase.auth.signOut(); location.replace('/login/'); return false; }
-  company = mine; role = mine.role;
+  company = mine; role = mine.role; companyId = mine.id;
   applyBrand(mine);
   document.getElementById('who').innerHTML =
     `${esc(session.user.email)} · <b>${esc(mine.company_code)}</b> · ${esc(role)}`;
@@ -192,7 +273,7 @@ async function guard() {
 /* ---- Orders ---- */
 async function loadOrders() {
   const { data, error } = await supabase.from('orders')
-    .select('id, order_code, customer_name, customer_email, customer_phone, vehicle, service, status, paid, source, created_at')
+    .select('id, order_code, customer_name, customer_email, customer_phone, vehicle, service, notes, status, paid, source, notify_customer, created_at')
     .order('created_at', { ascending: false });
   if (error) { document.getElementById('orders').innerHTML = '<p class="empty">Could not load orders.</p>'; return; }
   orders = data || [];
@@ -232,9 +313,135 @@ function renderOrders() {
           ${STATUSES.map(s => `<option ${s===o.status?'selected':''}>${s}</option>`).join('')}
         </select>
         <button class="paid-btn ${o.paid?'on':''}" data-id="${o.id}" data-paid="${o.paid}">${o.paid ? '✓ Paid' : 'Mark paid'}</button>
+        <button class="paid-btn open-detail" data-id="${o.id}">Notes &amp; messages →</button>
       </div>
     </div>`).join('');
 }
+
+/* ---- Order detail drawer: notes, notifications, customer messages ---- */
+let current = null;
+
+function openDetail(id) {
+  const o = orders.find(x => x.id === id);
+  if (!o) return;
+  current = o;
+  document.getElementById('sheet-title').textContent = o.order_code;
+  document.getElementById('sheet-sub').textContent = `${o.customer_name}${o.vehicle ? ' · ' + o.vehicle : ''}`;
+  document.getElementById('d-customer').innerHTML = [
+    ['Name', o.customer_name], ['Email', o.customer_email || '—'],
+    ['Phone', o.customer_phone || '—'], ['Service', o.service || '—'],
+    ['Status', o.status], ['Paid', o.paid ? 'Yes' : 'No']
+  ].map(([k,v]) => `<div class="kv"><span class="k">${k}</span><span>${esc(v)}</span></div>`).join('');
+  document.getElementById('d-notes').value = o.notes || '';
+
+  const tg = document.getElementById('d-notify');
+  tg.classList.toggle('on', !!o.notify_customer);
+  tg.setAttribute('aria-pressed', String(!!o.notify_customer));
+
+  const hasEmail = !!(o.customer_email && o.customer_email.trim());
+  document.getElementById('notify-hint').textContent = hasEmail
+    ? 'Sends an email through n8n each time you change this order’s status.'
+    : 'No email on file for this customer — notifications will be skipped.';
+  document.getElementById('send-hint').textContent = hasEmail
+    ? '' : 'No email on file — this message cannot be delivered.';
+  document.getElementById('send-msg').disabled = !hasEmail;
+
+  document.getElementById('overlay').classList.add('show');
+  loadMessages(o.id);
+}
+
+function closeDetail() {
+  document.getElementById('overlay').classList.remove('show');
+  current = null;
+}
+
+/* 'sent' only after n8n returns 2xx — 'dispatched' means handed to pg_net and
+   still awaiting n8n's response, so it must not be shown as delivered. */
+const DELIV = {
+  sent:       ['ok','sent'],
+  dispatched: ['warn','sending…'],
+  pending:    ['warn','pending'],
+  failed:     ['bad','failed'],
+  skipped:    ['warn','skipped']
+};
+
+async function loadMessages(orderId) {
+  const el = document.getElementById('d-msgs');
+  const { data, error } = await supabase.from('order_messages')
+    .select('id, kind, body, from_status, to_status, sent_by_name, delivery, delivery_note, created_at')
+    .eq('order_id', orderId).order('created_at', { ascending: false });
+  if (error) { el.innerHTML = '<p class="hint">Could not load messages.</p>'; return; }
+  const msgs = data || [];
+  if (!msgs.length) { el.innerHTML = '<p class="hint">No messages sent yet.</p>'; return; }
+  el.innerHTML = msgs.map(m => {
+    const [cls, label] = DELIV[m.delivery] || ['', m.delivery];
+    const what = m.kind === 'status_update'
+      ? `Status update: ${esc(m.from_status)} → ${esc(m.to_status)}`
+      : esc(m.body || '');
+    return `<div class="msg">
+      <div class="msg-top">
+        <span>${new Date(m.created_at).toLocaleString()} · ${esc(m.sent_by_name || 'system')}</span>
+        <span class="pill ${cls}" title="${esc(m.delivery_note || '')}">${esc(label)}</span>
+      </div>
+      <div class="msg-body">${what}</div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('orders').addEventListener('click', (e) => {
+  const b = e.target.closest('.open-detail');
+  if (b) openDetail(b.dataset.id);
+});
+document.getElementById('close-sheet').addEventListener('click', closeDetail);
+document.getElementById('overlay').addEventListener('click', (e) => { if (e.target.id === 'overlay') closeDetail(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDetail(); });
+
+document.getElementById('save-notes').addEventListener('click', async () => {
+  if (!current) return;
+  const btn = document.getElementById('save-notes');
+  btn.disabled = true;
+  const { error } = await supabase.from('orders')
+    .update({ notes: document.getElementById('d-notes').value }).eq('id', current.id);
+  btn.disabled = false;
+  if (error) { toast('Could not save notes'); return; }
+  toast('Notes saved');
+  await loadOrders();
+  if (role === 'owner') loadEvents();
+});
+
+document.getElementById('d-notify').addEventListener('click', async () => {
+  if (!current) return;
+  const tg = document.getElementById('d-notify');
+  const next = !tg.classList.contains('on');
+  const { error } = await supabase.from('orders').update({ notify_customer: next }).eq('id', current.id);
+  if (error) { toast('Could not update'); return; }
+  tg.classList.toggle('on', next);
+  tg.setAttribute('aria-pressed', String(next));
+  current.notify_customer = next;
+  toast(next ? 'Customer will be emailed' : 'Notifications off for this order');
+  await loadOrders();
+});
+
+document.getElementById('clear-msg').addEventListener('click', () => {
+  document.getElementById('d-msg').value = '';
+});
+
+document.getElementById('send-msg').addEventListener('click', async () => {
+  if (!current) return;
+  const body = document.getElementById('d-msg').value.trim();
+  if (!body) { toast('Type a message first'); return; }
+  const btn = document.getElementById('send-msg');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  // sent_by / delivery are stamped server-side; the client cannot forge them.
+  const { error } = await supabase.from('order_messages').insert({
+    company_id: companyId, order_id: current.id, kind: 'custom', channel: 'email', body
+  });
+  btn.disabled = false; btn.textContent = '✉ Send';
+  if (error) { toast('Could not send'); return; }
+  document.getElementById('d-msg').value = '';
+  toast('Message queued to n8n');
+  loadMessages(current.id);
+});
 
 document.getElementById('orders').addEventListener('change', async (e) => {
   const sel = e.target.closest('select.status');
